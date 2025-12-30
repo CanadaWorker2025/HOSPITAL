@@ -1,4 +1,4 @@
-# CorsixTH 问答要点汇总（本地 0.69.1）
+# HOSPITAL LOG
 
 ## 配置与关卡覆盖
 - 加载顺序：base_config.lua -> 00.SAM -> NN.SAM -> 若 map.lua 的 additional_config 包含该关，再叠加 Levels/originalNN.level。旧存档不会重载。
