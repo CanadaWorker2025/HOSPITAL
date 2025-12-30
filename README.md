@@ -36,3 +36,4 @@
 - 10倍培训速度，细心和能力，都可以增长
 - 空闲医生自动寻路，找空房间
 - 灭火器，垃圾桶，增加happiness, 范围2->3, +0.002 per tick -> +0.1/tick
+- config的地址 C:\Users\lvang\AppData\Roaming\CorsixTH
