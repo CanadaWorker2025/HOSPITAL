@@ -1,0 +1,13 @@
+---
+-- This file can be executed with the RUN DEBUG SCRIPT menu option or hotkey.
+-- Each time the script is run the latest version will be loaded from disk.
+--
+-- Like with the console you can reference clicked humanoids with the underscore
+-- global variable so for example: _:die() will make a clicked patient die.
+--
+-- The run time App class instance can be referenced with its global variable
+-- "TheApp", with it you can reference other run time class instances like:
+-- TheApp.world
+--
+-- Add your code below.
+---

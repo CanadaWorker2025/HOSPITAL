@@ -1,0 +1,85 @@
+Copyright (c) 2013 Mark "MarkL" Lawlor
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-- This is an extra configuration file loaded at level 8 from the original game.
+-- The win and lose on reputation would appear to be the wrong way round
+
+#win_criteria[0].Criteria.MaxMin.Value.Group.Bound 2 1 300000 1 0
+#win_criteria[1].Criteria.MaxMin.Value.Group.Bound	3 1 55 1 0
+#win_criteria[2].Criteria.MaxMin.Value.Group.Bound 4 1 500 1 0
+#win_criteria[3].Criteria.MaxMin.Value.Group.Bound 6 1 180000 1 0
+
+#lose_criteria[0].Criteria.MaxMin.Value.Group.Bound 1 0 200 1 400
+#lose_criteria[1].Criteria.MaxMin.Value.Group.Bound 2 0 -1000 2 10000
+#lose_criteria[2].Criteria.MaxMin.Value.Group.Bound 5 1 25 3 20
+
+
+
+-- Skill is skill * 100 (to work in integers)
+#start_staff[1].Doctor.Shrink.Surgeon.Researcher.Consultant.Skill 1 1 1 1 1 100
+#start_staff[2].Doctor.Shrink.Surgeon.Researcher.Consultant.Skill 1 1 1 1 1 100
+#start_staff[3].Doctor.Shrink.Surgeon.Researcher.Consultant.Skill 1 1 1 1 1 100
+These lines equal something like this:
+Doctor.Nurse.Handyman.Receptionist.Shrink.Surgeon.Researcher.Junior.Consultant.Skill 1 0 0 0 1 0 0 0 1 100
+
+#towns[8].StartCash 82000 # 起始资金
+#gbv.SodaPrice 20000
+#gbv.TrainingRate 250
+#gbv.TrainingValue[0].Value 120 
+#gbv.TrainingValue[1].Value 160
+#gbv.TrainingValue[2].Value 220
+
+
+#gbv.AbilityThreshold[0].Value 25    # 外科
+#gbv.AbilityThreshold[1].Value 20    # 精神科
+#gbv.AbilityThreshold[2].Value 15    # 研究
+
+#gbv.ConsultantThreshold 999 # 成为专家需要的时间
+
+#staff_levels[0].Nurses 25
+#staff_levels[0].Doctors 22
+#staff_levels[0].Handymen 18
+#staff_levels[0].Receptionists 14
+#staff_levels[0].ShrkRate 8
+#staff_levels[0].SurgRate 12
+#staff_levels[0].RschRate 15
+#staff_levels[0].ConsRate 12
+#staff_levels[0].JrRate 30
+
+
+#objects[37].AvailableForLevel 1   # 投影仪（培训室）
+#objects[37].StartAvail 1
+#objects[37].WhenAvail 0
+
+
+#objects[14].AvailableForLevel 1   # 扫描仪
+#objects[14].StartAvail 1
+#objects[14].WhenAvail 0
+
+#objects[40].AvailableForLevel 1   # 研究电脑（研究室）
+#objects[40].StartAvail 1
+#objects[40].WhenAvail 0
+
+#objects[55].AvailableForLevel 1   # 验尸机（研究室）
+#objects[55].StartAvail 1
+#objects[55].WhenAvail 0
+
+
+
