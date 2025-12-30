@@ -72,12 +72,12 @@ function Staff:tickDay()
       self:changeAttribute("happiness", -0.003 + (plant:isPleasingFactor() * 0.001))
     end
   end)
-  -- It always makes you happy to see you are in safe place
-  self.world:findObjectNear(self, "extinguisher", 2, function()
+  -- It always makes you happy to see you are in safe place  LSF
+  self.world:findObjectNear(self, "extinguisher", 3, function()
     self:changeAttribute("happiness", 0.1)
   end)
-  -- Extra room items add to your happiness (some more than others)
-  self.world:findObjectNear(self, "bin", 2, function()
+  -- Extra room items add to your happiness (some more than others)  LSF
+  self.world:findObjectNear(self, "bin", 3, function()
     self:changeAttribute("happiness", 0.1)
   end)
   self.world:findObjectNear(self, "bookcase", 2, function()
