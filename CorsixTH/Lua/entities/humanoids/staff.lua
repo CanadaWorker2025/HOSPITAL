@@ -580,7 +580,7 @@ function Staff:isIdle()
 end
 
 -- Ask dispatcher to assign this staff member to an outstanding call when idle.
--- Throttled to avoid scanning the queue every tick.
+-- Throttled to avoid scanning the queue every tick.  LSF
 function Staff:autoAnswerCallsIfIdle()
   if not self.hospital or self.humanoid_class == "Handyman" then
     return
