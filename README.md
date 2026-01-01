@@ -26,11 +26,37 @@
 - 诊断进度统一由 Patient:completeDiagnosticStep 计算，Room:dealtWithPatient 中调用。无房间专属系数。
 - 病房诊断 diag_ward 是病房的诊断步骤（非治疗）。
 
-## 其他
-- 细心程度 attention_to_detail：0~1 浮点，入职随机；默认培训/休息不提升，需改代码才会增长。
+## 其他 
+- 细心程度 attention_to_detail：0~1 浮点，入职随机；默认培训/休息不提升，改代码才会增长。
 - 市场占有率：由声望和接待能力等决定，范围 0–100%。声望满但占有率低通常因竞争医院、接待/诊断瓶颈、收费过高、环境/温度差、死亡/送回家多。
 
-## LSF mark
+## Function 实现/变更记录
+### 空闲医生自动寻路，找空房间
+- 主要修改文件：CorsixTH/Lua/calls_dispatcher.lua（新增自动补位调度）、CorsixTH/Lua/room.lua（职工进入房间时清除补位标记）。
+- 新增/改动的函数与字段：
+  - autoFillIdleRooms：每 50 tick 执行；清理过期补位分配，收集空房与走廊闲职工，按最近距离指派；每轮最多 3 个指派限流；轮询房间起点，避免后面房间长时间饿死；覆盖诊断、treatment、clinics 三类房。
+  - shouldAutoFillRoom：判断房间缺人且类型匹配（诊断/治疗/clinics），且无有效补位占用。
+  - isAutoFillCandidate：仅走廊闲医生/护士（非手艺人/接待，未 on_call/未被拾起/不在房间）。
+  - clearAutoFillForStaff：当职工接到正式呼叫或进入房间时清理补位状态，避免占坑。
+  - 数据字段：auto_fill_rooms（房间→补位职工）、_auto_fill_cooldown（节奏控制）、_auto_fill_room_cursor（房间扫描轮换）。
+- 逻辑效果：空房每 ~2.5s 自动抓最近的走廊闲职工补位；路径不可达则跳过继续找；诊断/治疗/诊所类房间均可被补位；正式紧急呼叫会覆盖补位并清理标记。
+- 遇到的问题与解决：
+  - 旧存档缺失 _auto_fill_cooldown、auto_fill_rooms 报错：在 onTick/autoFillIdleRooms 中默认初始化。
+  - CPU 卡顿：补位每轮最多 3 个指派并分摊房间轮询。
+  - 诊所类房间（如 DNA Fixer）无人补位：shouldAutoFillRoom 增加 categories.clinics 支持。
+  - 补位占坑：进入房间或接到正式呼叫时调用 clearAutoFillForStaff 释放。
+- 后续风险/待观察：补位职工若被阻挡但仍保持闲，可能长时间持有 auto_fill_room；目前轮询清理 fired/dead/on_call/pickup/在房间/非闲/医院不符，如出现“走廊站桩不进房”可再加“未朝目标移动超时”清理；多空房场景需多轮覆盖，可按表现调节限流或间隔。
+
+### 员工在休息室增长细心程度和能力
+- 主要修改文件：CorsixTH/Lua/humanoid_actions/use_staffroom.lua
+- 细心/能力成长（休息室）：CorsixTH/Lua/humanoid_actions/use_staffroom.lua 中 UseStaffRoomAction 的休息循环 loop_callback_use 会在休息室使用物件时，每 tick 小幅提升 profile.attention_to_detail（+relaxation*0.5，封顶 1）和 profile.skill（+relaxation*1.5，封顶 1，并调用 parseSkillLevel）。仅对有 profile 的职工生效，随使用沙发/台球/游戏机累积；离开房间、正常疲劳恢复逻辑保持不变。
+
+### 员工在培训室增长细心程度和能力
+- 主要修改文件：CorsixTH/Lua/entities/humanoids/staff/doctor.lua
+- 细心/能力成长（培训室）：CorsixTH/Lua/entities/humanoids/staff/doctor.lua 中 Doctor:tick/Doctor:trainSkill 在培训室、讲台椅学习时根据 TrainingRoom 的 training_factor、人数、阈值计算 delta 提升 profile.skill/专科标记，并在通用技能训练时额外提升 attention_to_detail（+delta*1.5，封顶 1）。房间因子由 CorsixTH/Lua/rooms/training.lua 根据投影仪、骷髅、书柜和 TrainingRate 构成；人数越多增长越慢；满值触发晋升/专科提示与头衔更新。
+
+
+## Config Change LSF mark 
 - 细心程度和能力，在休息室可以增长
 - 10倍科研速度
 - 10倍培训速度，细心和能力，都可以增长

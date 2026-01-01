@@ -354,6 +354,9 @@ function Room:onHumanoidEnter(humanoid)
     (_A.warnings.nurse_needs_desk_2),
   }
   if class.is(humanoid, Staff) then
+    if humanoid.world and humanoid.world.dispatcher then
+      humanoid.world.dispatcher:clearAutoFillForStaff(humanoid)
+    end
     -- If the room is already full of staff, or the staff member isn't relevant
     -- to the room, then make them leave. Otherwise, take control of them.
     local staff_entered = humanoid

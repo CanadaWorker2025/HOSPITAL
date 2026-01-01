@@ -34,10 +34,18 @@ function CallsDispatcher:CallsDispatcher(world)
   self.call_queue = {}
   self.change_callback = {}
   self.tick = 0
+  self.auto_fill_rooms = {}
+  self._auto_fill_cooldown = 0
 end
 
 function CallsDispatcher:onTick()
   self.tick = self.tick + 1
+  -- Old saves may not have initialized _auto_fill_cooldown; default it here.
+  self._auto_fill_cooldown = (self._auto_fill_cooldown or 0) - 1
+  if self._auto_fill_cooldown <= 0 then
+    self._auto_fill_cooldown = 50
+    self:autoFillIdleRooms()
+  end
 end
 
 function CallsDispatcher:addChangeCallback(callback, self_value)
@@ -433,6 +441,7 @@ function CallsDispatcher.onCheckpointCompleted(call)
 end
 
 function CallsDispatcher:executeCall(call, staff)
+  self:clearAutoFillForStaff(staff)
   assert(not call.assigned, "call to be executed is still assigned")
   assert(not call.dropped, "call to be executed is dropped")
   assert(not staff.on_call, "staff was on call and assigned to a new call")
@@ -527,6 +536,147 @@ function CallsDispatcher.getPriorityForRoom(room, attribute, staff)
   end
 
   return score
+end
+
+-- Clears any auto-fill bookkeeping for a staff member heading to an idle room.
+function CallsDispatcher:clearAutoFillForStaff(staff)
+  if not staff or not staff.auto_fill_room then
+    return
+  end
+  local room = staff.auto_fill_room
+  if self.auto_fill_rooms[room] == staff then
+    self.auto_fill_rooms[room] = nil
+  end
+  staff.auto_fill_room = nil
+end
+
+local function missingStaffCount(missing)
+  for _, count in pairs(missing) do
+    if count then
+      return true
+    end
+  end
+  return false
+end
+
+-- Decide whether a room should be auto-filled by idle corridor staff.
+function CallsDispatcher:shouldAutoFillRoom(room)
+  if not room or not room.is_active or not room.hospital then
+    return false
+  end
+  local categories = room.room_info.categories or {}
+  -- Clinics are treatment rooms in Theme Hospital data; include them as well.
+  if not categories.diagnosis and not categories.treatment and not categories.clinics then
+    return false
+  end
+  local missing = room:getMissingStaff(room:getRequiredStaffCriteria())
+  if not missingStaffCount(missing) then
+    return false
+  end
+  local assigned = self.auto_fill_rooms[room]
+  if assigned and assigned.auto_fill_room == room and not assigned.on_call and not assigned.fired then
+    return false
+  end
+  return true
+end
+
+-- Check if staff can be redirected for idle room coverage.
+function CallsDispatcher:isAutoFillCandidate(staff)
+  if not staff or staff.fired or staff.dead or staff.pickup or staff.on_call then
+    return false
+  end
+  if staff.humanoid_class == "Handyman" or staff.humanoid_class == "Receptionist" then
+    return false
+  end
+  if staff:getRoom() then
+    return false
+  end
+  return staff:isIdle() and not staff.auto_fill_room
+end
+
+-- Send an idle staff member to a room without consuming dispatcher calls.
+function CallsDispatcher:_sendStaffToIdleRoom(room, staff)
+  self.auto_fill_rooms[room] = staff
+  staff.auto_fill_room = room
+  staff:setNextAction(room:createEnterAction(staff))
+  staff:setDynamicInfoText(_S.dynamic_info.staff.actions.heading_for:format(room.room_info.name))
+end
+
+-- Every ~50 ticks, try to place idle corridor staff in empty diagnosis/treatment rooms.
+function CallsDispatcher:autoFillIdleRooms()
+  -- Old saves may not have this table; create on demand.
+  self.auto_fill_rooms = self.auto_fill_rooms or {}
+  local assignments_done = 0
+  local assignments_cap = 3 -- avoid heavy scans each tick; spread work over time.  LSF
+  self._auto_fill_room_cursor = self._auto_fill_room_cursor or 1
+  for room, staff in pairs(self.auto_fill_rooms) do
+    if not staff or staff.fired or staff.dead or staff.on_call or staff.pickup or staff.auto_fill_room ~= room
+        or staff:getRoom() or not staff:isIdle() or staff.hospital ~= room.hospital then
+      self.auto_fill_rooms[room] = nil
+      if staff then
+        staff.auto_fill_room = nil
+      end
+    end
+  end
+
+  local rooms = {}
+  for _, room in pairs(self.world.rooms) do
+    if self:shouldAutoFillRoom(room) then
+      rooms[#rooms + 1] = room
+    end
+  end
+  if #rooms == 0 then
+    return
+  end
+  -- Rotate start to give all rooms a chance across ticks.
+  local start = self._auto_fill_room_cursor
+  local room_count = #rooms
+
+  local candidates = {}
+  for _, entity in ipairs(self.world.entities) do
+    if class.is(entity, Staff) and self:isAutoFillCandidate(entity) then
+      candidates[#candidates + 1] = entity
+    end
+  end
+  if #candidates == 0 then
+    return
+  end
+
+  for j = 0, room_count - 1 do
+    if assignments_done >= assignments_cap then break end
+    local idx = ((start - 1 + j) % room_count) + 1
+    local room = rooms[idx]
+    local missing = room:getMissingStaff(room:getRequiredStaffCriteria())
+    local rx, ry = room:getEntranceXY(false)
+    for attribute, count in pairs(missing) do
+      local needed = count or 0
+      while needed > 0 do
+        local best_i, best_distance
+        for i, staff in ipairs(candidates) do
+          if staff and staff:fulfillsCriterion(attribute) and staff.hospital == room.hospital
+              and staff.tile_x and staff.tile_y then
+            local distance = self.world:getPathDistance(staff.tile_x, staff.tile_y, rx, ry)
+            if distance and (not best_distance or distance < best_distance) then
+              best_distance = distance
+              best_i = i
+            end
+          end
+        end
+        if best_i then
+          local staff = table.remove(candidates, best_i)
+          self:_sendStaffToIdleRoom(room, staff)
+          needed = needed - 1
+          assignments_done = assignments_done + 1
+          if assignments_done >= assignments_cap then
+            return
+          end
+        else
+          needed = 0
+        end
+      end
+    end
+  end
+  self._auto_fill_room_cursor = ((start - 1 + room_count) % room_count) + 1
 end
 
 function CallsDispatcher.sendStaffToRoom(room, staff)
