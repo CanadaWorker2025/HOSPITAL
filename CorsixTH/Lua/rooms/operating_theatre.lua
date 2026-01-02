@@ -162,6 +162,26 @@ end
 --!param operation_table (OperatingTable): master object representing
 --! the operation table.
 function OperatingTheatreRoom:buildTableAction1(surgeon1, patient, operation_table)
+  if not operation_table then
+    -- Fail-safe: missing table; abort and return a no-op action.
+    if self._abortOperation then
+      self:_abortOperation(patient, surgeon1, nil)
+    else
+      -- Fallback if method missing (savegame compatibility).
+      self:setXRayOn(false)
+      if patient then
+        patient:finishAction()
+        patient:setNextAction(self:createLeaveAction())
+      end
+      if surgeon1 then
+        surgeon1:finishAction()
+        local leave = self:createLeaveAction():setMustHappen(true):truncateOnHighPriority()
+        surgeon1:setNextAction(leave)
+        surgeon1:queueAction(MeanderAction())
+      end
+    end
+    return IdleAction():setMustHappen(true)
+  end
   local loop_callback_multi_use = --[[persistable:operatring_theatre_multi_use_callback]] function()
     -- dirty hack to make the truncated animation work
     surgeon1.animation_idx = nil
@@ -225,6 +245,18 @@ function OperatingTheatreRoom:commandEnteringPatient(patient)
   local surgeon1 = next(self.staff_member_set)
   local surgeon2 = next(self.staff_member_set, surgeon1)
   assert(surgeon1 and surgeon2, "Not enough staff in operating theatre")
+
+  -- Require both operating tables; if missing, abort gracefully.
+  local has_table_a = self.world:findObjectNear(surgeon1, "operating_table")
+  local has_table_b = self.world:findObjectNear(surgeon1, "operating_table_b")
+  if not has_table_a or not has_table_b then
+    -- Notify and cleanly exit everyone; send patient away to avoid loop.
+    self:_abortOperation(patient, surgeon1, surgeon2)
+    if patient and patient.hospital then
+      patient:goHome("kicked", "operating_table_missing")
+    end
+    return Room.commandEnteringPatient(self, patient)
+  end
 
   local screen, sx, sy = self.world:findObjectNear(patient, "surgeon_screen")
   -- Patient walk to surgeon screen

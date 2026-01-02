@@ -565,6 +565,10 @@ function CallsDispatcher:shouldAutoFillRoom(room)
     return false
   end
   local categories = room.room_info.categories or {}
+  -- Avoid auto-filling complex multi-staff surgery to prevent stuck surgeons / invalid states.
+  -- if room.room_info.id == "operating_theatre" then
+  --   return false
+  -- end
   -- Clinics are treatment rooms in Theme Hospital data; include them as well.
   if not categories.diagnosis and not categories.treatment and not categories.clinics then
     return false
