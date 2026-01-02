@@ -607,7 +607,7 @@ function CallsDispatcher:autoFillIdleRooms()
   -- Old saves may not have this table; create on demand.
   self.auto_fill_rooms = self.auto_fill_rooms or {}
   local assignments_done = 0
-  local assignments_cap = 3 -- avoid heavy scans each tick; spread work over time.  LSF
+  local assignments_cap = 5 -- avoid heavy scans each tick; spread work over time.  LSF
   self._auto_fill_room_cursor = self._auto_fill_room_cursor or 1
   for room, staff in pairs(self.auto_fill_rooms) do
     if not staff or staff.fired or staff.dead or staff.on_call or staff.pickup or staff.auto_fill_room ~= room

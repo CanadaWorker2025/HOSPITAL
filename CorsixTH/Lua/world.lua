@@ -1134,7 +1134,8 @@ end
 --!param hospital (hospital): the hospital used to compute the
 --! reputation impact
 function World:getReputationImpact(hospital)
-  local result = 1 + ((hospital.reputation - 500) / 250)
+  -- LSF market share to 100%
+  local result = 1 + ((hospital.reputation - 500) / (500 / 3))
 
   -- The result must be positive
   if result <= 0 then
