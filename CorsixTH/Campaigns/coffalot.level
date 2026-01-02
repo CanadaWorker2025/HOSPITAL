@@ -222,3 +222,47 @@ Divides research input to get the amount of research points. must be > 0
 #computer[12].Playing 1 CORSIX
 #computer[13].Playing 1 ROUJIN
 #computer[14].Playing 1 EDVIN
+
+
+
+--------------------- LSF Information -----------------------
+#gbv.SodaPrice 20000
+#gbv.TrainingRate 250
+#gbv.TrainingValue[0].Value 120 
+#gbv.TrainingValue[1].Value 160
+#gbv.TrainingValue[2].Value 220
+
+
+#gbv.AbilityThreshold[0].Value 25    # 外科
+#gbv.AbilityThreshold[1].Value 20    # 精神科
+#gbv.AbilityThreshold[2].Value 15    # 研究
+
+#gbv.ConsultantThreshold 999 # 成为专家需要的时间
+
+#staff_levels[0].Nurses 25
+#staff_levels[0].Doctors 22
+#staff_levels[0].Handymen 18
+#staff_levels[0].Receptionists 14
+#staff_levels[0].ShrkRate 8
+#staff_levels[0].SurgRate 12
+#staff_levels[0].RschRate 15
+#staff_levels[0].ConsRate 12
+#staff_levels[0].JrRate 30
+
+
+#objects[37].AvailableForLevel 1   # 投影仪（培训室）
+#objects[37].StartAvail 1
+#objects[37].WhenAvail 0
+
+
+#objects[14].AvailableForLevel 1   # 扫描仪
+#objects[14].StartAvail 1
+#objects[14].WhenAvail 0
+
+#objects[40].AvailableForLevel 1   # 研究电脑（研究室）
+#objects[40].StartAvail 1
+#objects[40].WhenAvail 0
+
+#objects[55].AvailableForLevel 1   # 验尸机（研究室）
+#objects[55].StartAvail 1
+#objects[55].WhenAvail 0
